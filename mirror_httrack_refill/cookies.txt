@@ -1,4 +1,0 @@
-# HTTrack Website Copier Cookie File
-# This file format is compatible with Netscape cookies
-www.aspaklaria.info	TRUE	/	FALSE	1999999999	request_id	fec3712b-7687-4d7d-ba89-88febd36dfd4
-

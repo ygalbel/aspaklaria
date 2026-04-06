@@ -1,6 +1,0 @@
-date	size'/'remotesize	flags(request:Update,Range state:File response:Modified,Chunked,gZipped)	statuscode	status ('servermsg')	MIME	Etag|Date	URL	localfile	(from URL)
-21:31:43	0/0	---M--	200	added ('OK')	text/plain	date:Mon,%2006%20Apr%202026%2018:31:21%20GMT	https://www.aspaklaria.info/robots.txt		(from )
-21:31:47	199/199	---MCZ	403	error ('Forbidden')	text/html	date:Mon,%2006%20Apr%202026%2018:31:21%20GMT	https://www.aspaklaria.info/100_QOF/	C:/code/aspaklaria/mirror_httrack_refill/www.aspaklaria.info/100_QOF/index.html	(from )
-21:31:47	199/199	---MCZ	403	error ('Forbidden')	text/html	date:Mon,%2006%20Apr%202026%2018:31:21%20GMT	https://www.aspaklaria.info/200_RESH/	C:/code/aspaklaria/mirror_httrack_refill/www.aspaklaria.info/200_RESH/index.html	(from )
-21:31:47	199/199	---MCZ	403	error ('Forbidden')	text/html	date:Mon,%2006%20Apr%202026%2018:31:21%20GMT	https://www.aspaklaria.info/300_SHIN/	C:/code/aspaklaria/mirror_httrack_refill/www.aspaklaria.info/300_SHIN/index.html	(from )
-21:31:47	199/199	---MCZ	403	error ('Forbidden')	text/html	date:Mon,%2006%20Apr%202026%2018:31:45%20GMT	https://www.aspaklaria.info/400_TAV/	C:/code/aspaklaria/mirror_httrack_refill/www.aspaklaria.info/400_TAV/index.html	(from )
