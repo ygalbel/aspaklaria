@@ -27,12 +27,6 @@ def write_text(path, content):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as handle:
         handle.write(content)
-    if path.lower().endswith((".htm", ".html")) and "%" in path:
-        decoded_path = urllib.parse.unquote(path)
-        if decoded_path != path:
-            os.makedirs(os.path.dirname(decoded_path), exist_ok=True)
-            with open(decoded_path, "w", encoding="utf-8") as handle:
-                handle.write(content)
 
 
 def extract_title(content, fallback):
@@ -59,8 +53,8 @@ def encode_path(path):
 
 
 def output_path_for(rel_path):
-    encoded_rel = encode_path(rel_path.replace(os.sep, "/"))
-    return os.path.join(OUTPUT_DIR, encoded_rel.replace("/", os.sep))
+    decoded_rel = urllib.parse.unquote(rel_path.replace(os.sep, "/"))
+    return os.path.join(OUTPUT_DIR, decoded_rel.replace("/", os.sep))
 
 
 def normalize_text(value):
