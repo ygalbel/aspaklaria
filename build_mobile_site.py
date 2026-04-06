@@ -186,6 +186,15 @@ def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home
         legacy_css = "\n".join(legacy_styles)
         legacy_block = f"\n  <style>\n{legacy_css}\n  </style>"
 
+    site_search_block = ""
+    if "is-home" in body_class:
+        site_search_block = """
+    <div class=\"site-search\" data-role=\"site-search\" hidden>
+      <label for=\"siteSearch\">חיפוש ישיר</label>
+      <input id=\"siteSearch\" type=\"search\" placeholder=\"הקלד כדי לחפש ערך\" autocomplete=\"off\" list=\"termSuggestions\" />
+      <datalist id=\"termSuggestions\"></datalist>
+    </div>"""
+
     filter_block = ""
     if "is-home" not in body_class:
         filter_block = """
@@ -211,13 +220,9 @@ def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home
     </a>
     <nav class=\"letters\" aria-label=\"ניווט אותיות\">{nav_html}</nav>
   </header>
-  <main id=\"main\" class=\"site__main\">
-    <div class=\"site-search\" data-role=\"site-search\" hidden>
-      <label for=\"siteSearch\">חיפוש ישיר</label>
-      <input id=\"siteSearch\" type=\"search\" placeholder=\"הקלד כדי לחפש ערך\" autocomplete=\"off\" list=\"termSuggestions\" />
-      <datalist id=\"termSuggestions\"></datalist>
-    </div>
-{filter_block}
+   <main id=\"main\" class=\"site__main\">
+ {site_search_block}
+ {filter_block}
     <div class=\"term-list\" data-role=\"term-list\">
 {body_html}
     </div>
