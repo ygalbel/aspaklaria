@@ -51,13 +51,13 @@ div.Section2
 -->
   </style>
 </head>
-<body class="site">
+<body class="site ">
   <a class="skip" href="#main">דלג לתוכן</a>
   <header class="site__header">
-    <div class="brand">
-      <div class="brand__he">אספקלריא</div>
-      <div class="brand__en">ASPAKLARIA</div>
-    </div>
+    <a class="brand" href="../../index.html" aria-label="עמוד ראשי">
+      <span class="brand__he">אספקלריא</span>
+      <span class="brand__en">ASPAKLARIA</span>
+    </a>
     <nav class="letters" aria-label="ניווט אותיות"><a href="../001_ALEF/ALEF.html">א</a>
 <a href="../002_BET/BET.html">ב</a>
 <a href="../003_GIMEL/GIMEL.html">ג</a>
@@ -81,7 +81,14 @@ div.Section2
 <a href="../300_SHIN/SHIN.html">ש</a>
 <a href="../400_TAV/TAV.html">ת</a></nav>
   </header>
-  <main id="main" class="site__main">
+   <main id="main" class="site__main">
+ 
+ 
+    <div class="term-filter" data-role="term-filter" hidden>
+      <label for="termFilter">חיפוש במונחים</label>
+      <input id="termFilter" type="search" placeholder="הקלד כדי לסנן" autocomplete="off" />
+    </div>
+    <div class="term-list" data-role="term-list">
 <h1>&#1502;&#1499;&#1514;&#1501; </h1>
 <h2>&#1514;&#1512;&#1490;&#1493;&#1501;
 &#1497;&#1493;&#1504;&#1514;&#1503;: </h2>
@@ -129,9 +136,89 @@ div.Section2
 &#1514;&#1502;&#1497;&#1491;&#1497; &#1513;&#1500; &#1491;&#1493;&#1491;.
 (&#1513;&#1501; &#1496;&#1494; &#1488;) </p>
 <p>&nbsp;</p>
+    </div>
   </main>
   <footer class="site__footer">
     <small>aspaklaria.info (mobile-friendly copy)</small>
   </footer>
+  <script>
+    (() => {
+      if (document.body.classList.contains('is-home')) {
+        const searchWrap = document.querySelector('[data-role="site-search"]');
+        const input = document.getElementById('siteSearch');
+        const datalist = document.getElementById('termSuggestions');
+        if (searchWrap && input && datalist) {
+          fetch('search-index.json')
+            .then((res) => res.json())
+            .then((data) => {
+              const map = new Map();
+              const fragment = document.createDocumentFragment();
+              data.forEach((item) => {
+                const label = item.term + ' — ' + item.letter;
+                if (!map.has(label)) {
+                  map.set(label, item.href);
+                  const opt = document.createElement('option');
+                  opt.value = label;
+                  fragment.appendChild(opt);
+                }
+                if (!map.has(item.term)) {
+                  map.set(item.term, item.href);
+                }
+              });
+              datalist.appendChild(fragment);
+              searchWrap.hidden = false;
+
+              const go = () => {
+                const value = input.value.trim();
+                if (!value) return;
+                const target = map.get(value);
+                if (target) window.location.href = target;
+              };
+
+              input.addEventListener('change', go);
+              input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') go();
+              });
+            })
+            .catch(() => {});
+        }
+      }
+
+      const list = document.querySelector('[data-role="term-list"]');
+      const filterWrap = document.querySelector('[data-role="term-filter"]');
+      if (!list || !filterWrap) return;
+
+      if (document.body.classList.contains('is-home')) return;
+
+      const links = Array.from(list.querySelectorAll('a[href]'));
+      if (links.length < 20) return;
+
+      document.body.classList.add('is-index');
+      filterWrap.hidden = false;
+
+      const input = document.getElementById('termFilter');
+      const items = links.map((link) => ({
+        link,
+        text: link.textContent?.trim() || ''
+      }));
+
+      const update = () => {
+        const query = (input.value || '').trim().toLowerCase();
+        if (!query) {
+          items.forEach(({ link }) => {
+            const row = link.closest('p') || link;
+            row.hidden = false;
+          });
+          return;
+        }
+        items.forEach(({ link, text }) => {
+          const row = link.closest('p') || link;
+          row.hidden = !text.toLowerCase().includes(query);
+        });
+      };
+
+      input.addEventListener('input', update);
+    })();
+  </script>
 </body>
 </html>

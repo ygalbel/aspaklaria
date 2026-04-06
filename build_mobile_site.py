@@ -27,6 +27,12 @@ def write_text(path, content):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as handle:
         handle.write(content)
+    if path.lower().endswith((".htm", ".html")) and "%" in path:
+        decoded_path = urllib.parse.unquote(path)
+        if decoded_path != path:
+            os.makedirs(os.path.dirname(decoded_path), exist_ok=True)
+            with open(decoded_path, "w", encoding="utf-8") as handle:
+                handle.write(content)
 
 
 def extract_title(content, fallback):
@@ -173,6 +179,11 @@ def rel_prefix(path):
     if parts == ["."]:
         return ""
     return "../" * len(parts)
+
+
+def root_index_href(path):
+    output_rel = rel_prefix(path)
+    return output_rel + "../index.html"
 
 
 def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home_href, body_class="", legacy_styles=None):
@@ -344,12 +355,13 @@ def main():
     home_title = "Aspaklaria"
     home_path = os.path.join(OUTPUT_DIR, "index.html")
     home_css = rel_prefix(home_path) + "site.css"
+    home_href = root_index_href(home_path)
     home_nav = [{
         "raw": item["raw"],
         "encoded": relative_link(item["encoded"], os.path.dirname(home_path)),
         "text": item["text"]
     } for item in nav_items]
-    home_html = build_template(home_title, home_body, home_nav, logo_he, logo_en, home_css, "index.html", "is-home")
+    home_html = build_template(home_title, home_body, home_nav, logo_he, logo_en, home_css, home_href, "is-home")
     write_text(home_path, home_html)
 
     build_search_index(nav_items)
@@ -357,6 +369,8 @@ def main():
     for root, _dirs, files in os.walk(SOURCE_DIR):
         for name in files:
             if not name.lower().endswith((".htm", ".html")):
+                continue
+            if name.lower().endswith((".z.htm", ".z.html")):
                 continue
             source_path = os.path.join(root, name)
             rel_path = os.path.relpath(source_path, SOURCE_DIR)
@@ -374,7 +388,7 @@ def main():
                 "encoded": relative_link(item["encoded"], current_dir),
                 "text": item["text"]
             } for item in nav_items]
-            home_href = rel_prefix(dest_path) + "index.html"
+            home_href = root_index_href(dest_path)
             html_page = build_template(title, body, page_nav, logo_he, logo_en, css_path, home_href, "", legacy_styles)
             write_text(dest_path, html_page)
 
