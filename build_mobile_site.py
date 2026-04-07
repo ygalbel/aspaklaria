@@ -208,6 +208,14 @@ def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home
       <input id=\"termFilter\" type=\"search\" placeholder=\"הקלד כדי לסנן\" autocomplete=\"off\" />
     </div>"""
 
+    suggested_block = ""
+    if "is-home" in body_class:
+        suggested_block = """
+    <section class=\"suggested\" data-role=\"suggested\" hidden>
+      <h2 class=\"suggested__title\">הצעות להיום</h2>
+      <div class=\"suggested__groups\" data-role=\"suggested-groups\"></div>
+    </section>"""
+
     return f"""<!doctype html>
 <html lang=\"he\" dir=\"rtl\">
 <head>
@@ -226,8 +234,9 @@ def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home
     <nav class=\"letters\" aria-label=\"ניווט אותיות\">{nav_html}</nav>
   </header>
    <main id=\"main\" class=\"site__main\">
- {site_search_block}
- {filter_block}
+   {site_search_block}
+  {filter_block}
+  {suggested_block}
     <div class=\"term-list\" data-role=\"term-list\">
 {body_html}
     </div>
@@ -236,13 +245,14 @@ def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home
     <small>aspaklaria.info (mobile-friendly copy)</small>
   </footer>
   <script>
-    (() => {{
-      if (document.body.classList.contains('is-home')) {{
-        const searchWrap = document.querySelector('[data-role="site-search"]');
-        const input = document.getElementById('siteSearch');
-        const datalist = document.getElementById('termSuggestions');
-        if (searchWrap && input && datalist) {{
-          fetch('search-index.json')
+     (() => {{
+       const isHome = document.body.classList.contains('is-home');
+       if (isHome) {{
+         const searchWrap = document.querySelector('[data-role="site-search"]');
+         const input = document.getElementById('siteSearch');
+         const datalist = document.getElementById('termSuggestions');
+         if (searchWrap && input && datalist) {{
+           fetch('search-index.json')
             .then((res) => res.json())
             .then((data) => {{
               const map = new Map();
@@ -269,17 +279,149 @@ def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home
                 if (target) window.location.href = target;
               }};
 
-              input.addEventListener('change', go);
-              input.addEventListener('keydown', (event) => {{
-                if (event.key === 'Enter') go();
-              }});
-            }})
-            .catch(() => {{}});
-        }}
-      }}
+             input.addEventListener('change', go);
+             input.addEventListener('keydown', (event) => {{
+               if (event.key === 'Enter') go();
+             }});
+           }})
+           .catch(() => {{}});
+         }}
+       }}
 
-      const list = document.querySelector('[data-role="term-list"]');
-      const filterWrap = document.querySelector('[data-role="term-filter"]');
+       if (isHome) {{
+         const suggestionsWrap = document.querySelector('[data-role="suggested"]');
+         const groupsWrap = document.querySelector('[data-role="suggested-groups"]');
+         if (suggestionsWrap && groupsWrap) {{
+           const now = new Date();
+           const pad = (value) => String(value).padStart(2, '0');
+           const today = `${{now.getFullYear()}}-${{pad(now.getMonth() + 1)}}-${{pad(now.getDate())}}`;
+           const cacheKey = 'aspaklaria-hebcal-v1';
+           const cacheTtl = 24 * 60 * 60 * 1000;
+
+           const readCache = () => {{
+             try {{
+               const raw = localStorage.getItem(cacheKey);
+               if (!raw) return null;
+               const parsed = JSON.parse(raw);
+               if (!parsed || !parsed.ts || !parsed.data) return null;
+               if (Date.now() - parsed.ts > cacheTtl) return null;
+               return parsed.data;
+             }} catch (err) {{
+               return null;
+             }}
+           }};
+
+           const writeCache = (data) => {{
+             try {{
+               localStorage.setItem(cacheKey, JSON.stringify({{ ts: Date.now(), data }}));
+             }} catch (err) {{
+               // Ignore cache errors
+             }}
+           }};
+
+           const fetchJson = async (url) => {{
+             const res = await fetch(url);
+             if (!res.ok) throw new Error(`fetch failed: ${{url}}`);
+             return res.json();
+           }};
+
+           const normalize = (value) => (value || '').trim();
+           const addGroup = (label, keys, map, groups) => {{
+             const results = [];
+             const seen = new Set();
+             keys.forEach((key) => {{
+               const entries = map && map[normalize(key)];
+               if (!Array.isArray(entries)) return;
+               entries.forEach((entry) => {{
+                 if (!entry || !entry.href || !entry.label) return;
+                 const sig = `${{entry.label}}|${{entry.href}}`;
+                 if (seen.has(sig)) return;
+                 seen.add(sig);
+                 results.push(entry);
+               }});
+             }});
+             if (results.length) groups.push({{ label, entries: results }});
+           }};
+
+           const renderGroups = (groups) => {{
+             groupsWrap.innerHTML = '';
+             if (!groups.length) return;
+             groups.forEach((group) => {{
+               const section = document.createElement('section');
+               section.className = 'suggested__group';
+               const title = document.createElement('h3');
+               title.textContent = group.label;
+               title.className = 'suggested__group-title';
+               const list = document.createElement('ul');
+               list.className = 'suggested__list';
+               group.entries.forEach((entry) => {{
+                 const item = document.createElement('li');
+                 const link = document.createElement('a');
+                 link.textContent = entry.label;
+                 link.href = encodeURI(entry.href);
+                 item.appendChild(link);
+                 list.appendChild(item);
+               }});
+               section.appendChild(title);
+               section.appendChild(list);
+               groupsWrap.appendChild(section);
+             }});
+             suggestionsWrap.hidden = false;
+           }};
+
+           const resolveSuggestions = async () => {{
+             const [suggestions, calendar, converter] = await Promise.all([
+               fetchJson('suggestions.json'),
+               fetchJson(`https://www.hebcal.com/hebcal?cfg=json&v=1&maj=on&min=on&ss=on&mod=on&nx=on&year=now&month=now&lg=he&i=on`),
+               fetchJson(`https://www.hebcal.com/converter?cfg=json&g2h=1&date=${{today}}&strict=1`)
+             ]);
+             const items = Array.isArray(calendar.items) ? calendar.items : [];
+             const todaysItems = items.filter((item) => item.date === today);
+             const parashot = todaysItems
+               .filter((item) => item.category === 'parashat')
+               .map((item) => normalize(item.hebrew || item.title));
+             const holidayCategories = new Set([
+               'holiday',
+               'roshchodesh',
+               'fast',
+               'special_shabbat',
+               'modern',
+               'minor',
+               'major',
+               'cholhamoed'
+             ]);
+             const holidays = todaysItems
+               .filter((item) => holidayCategories.has(item.category))
+               .map((item) => normalize(item.hebrew || item.title));
+             const hebrewDate = normalize(converter && converter.hebrew);
+
+             const groups = [];
+             addGroup('פרשת השבוע', parashot, suggestions.parasha || {{}}, groups);
+             addGroup('חגים', holidays, suggestions.holiday || {{}}, groups);
+             if (hebrewDate) {{
+               addGroup('תאריך עברי', [hebrewDate], suggestions.hebrew_date || {{}}, groups);
+             }}
+             renderGroups(groups);
+             return groups;
+           }};
+
+           const cached = readCache();
+           if (cached) {{
+             renderGroups(cached.groups || []);
+           }} else {{
+             resolveSuggestions()
+               .then((groups) => {{
+                 if (groups && Array.isArray(groups)) {{
+                   writeCache({{ groups }});
+                 }}
+               }})
+               .catch(() => {{}});
+           }}
+         }}
+       }}
+
+       const list = document.querySelector('[data-role="term-list"]');
+       const filterWrap = document.querySelector('[data-role="term-filter"]');
       if (!list || !filterWrap) return;
 
       if (document.body.classList.contains('is-home')) return;
