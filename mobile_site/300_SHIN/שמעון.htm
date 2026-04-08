@@ -2251,11 +2251,51 @@ class=hebrewchar>&#1493;&#1494;&#1492;
          }
        }
 
-       const list = document.querySelector('[data-role="term-list"]');
-       const filterWrap = document.querySelector('[data-role="term-filter"]');
-      if (!list || !filterWrap) return;
+        const list = document.querySelector('[data-role="term-list"]');
+        if (list && !document.body.classList.contains('is-home')) {
+          const headings = Array.from(list.querySelectorAll('h2'));
+          headings.forEach((heading, index) => {
+            const sectionParagraphs = [];
+            let node = heading.nextElementSibling;
+            while (node && node.tagName !== 'H2') {
+              if (node.tagName === 'P') {
+                sectionParagraphs.push(node);
+              }
+              node = node.nextElementSibling;
+            }
 
-      if (document.body.classList.contains('is-home')) return;
+            if (!sectionParagraphs.length) return;
+
+            heading.classList.add('section-heading');
+
+            const toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'section-toggle';
+            toggle.setAttribute('aria-expanded', 'true');
+            toggle.textContent = 'הסתר';
+
+            const setExpanded = (expanded) => {
+              toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+              toggle.textContent = expanded ? 'הסתר' : 'הצג';
+              sectionParagraphs.forEach((paragraph) => {
+                paragraph.hidden = !expanded;
+              });
+            };
+
+            toggle.addEventListener('click', () => {
+              const expanded = toggle.getAttribute('aria-expanded') === 'true';
+              setExpanded(!expanded);
+            });
+
+            heading.appendChild(toggle);
+            setExpanded(true);
+          });
+        }
+
+        const filterWrap = document.querySelector('[data-role="term-filter"]');
+       if (!list || !filterWrap) return;
+
+       if (document.body.classList.contains('is-home')) return;
 
       const links = Array.from(list.querySelectorAll('a[href]'));
       if (links.length < 20) return;

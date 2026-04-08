@@ -273,6 +273,36 @@ img {
   border-radius: 10px;
 }
 
+.site__main h2.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.section-toggle {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 88%, white);
+  color: var(--accent);
+  font: inherit;
+  font-size: var(--step--1);
+  line-height: 1.2;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.section-toggle:hover {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  color: var(--accent-dark);
+}
+
+.section-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, white);
+  outline-offset: 2px;
+}
+
 .site__main p {
   margin: 0 0 1rem;
   text-align: justify;
