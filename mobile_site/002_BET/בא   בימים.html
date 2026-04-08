@@ -45,6 +45,7 @@ div.Section2
 </head>
 <body class="site ">
   <a class="skip" href="#main">דלג לתוכן</a>
+  <a class="quick-home" href="../../index.html" aria-label="חזרה לעמוד הראשי">אספקלריא</a>
   <header class="site__header">
     <a class="brand" href="../../index.html" aria-label="עמוד ראשי">
       <span class="brand__he">אספקלריא</span>
@@ -75,11 +76,7 @@ div.Section2
   </header>
    <main id="main" class="site__main">
    
-  
-    <div class="term-filter" data-role="term-filter" hidden>
-      <label for="termFilter">חיפוש במונחים</label>
-      <input id="termFilter" type="search" placeholder="הקלד כדי לסנן" autocomplete="off" />
-    </div>
+   
   
     <div class="term-list" data-role="term-list">
 <h1>&#1489;&#1488; &nbsp;&nbsp;&#1489;&#1497;&#1502;&#1497;&#1501; &nbsp;&nbsp;</h1>
@@ -403,6 +400,18 @@ div.Section2
          }
        }
 
+        const quickHome = document.querySelector('.quick-home');
+        const header = document.querySelector('.site__header');
+        if (quickHome && header && !isHome) {
+          const updateQuickHome = () => {
+            const shouldShow = header.getBoundingClientRect().bottom <= 0;
+            document.body.classList.toggle('show-quick-home', shouldShow);
+          };
+          updateQuickHome();
+          window.addEventListener('scroll', updateQuickHome, { passive: true });
+          window.addEventListener('resize', updateQuickHome);
+        }
+
         const list = document.querySelector('[data-role="term-list"]');
         if (list && !document.body.classList.contains('is-home')) {
           const headings = Array.from(list.querySelectorAll('h2'));
@@ -444,18 +453,30 @@ div.Section2
           });
         }
 
-        const filterWrap = document.querySelector('[data-role="term-filter"]');
-       if (!list || !filterWrap) return;
+       if (!list) return;
 
        if (document.body.classList.contains('is-home')) return;
+
+      if (list.querySelector('h2')) return;
 
       const links = Array.from(list.querySelectorAll('a[href]'));
       if (links.length < 20) return;
 
       document.body.classList.add('is-index');
-      filterWrap.hidden = false;
 
-      const input = document.getElementById('termFilter');
+      const filterWrap = document.createElement('div');
+      filterWrap.className = 'term-filter';
+      const label = document.createElement('label');
+      label.setAttribute('for', 'termFilter');
+      label.textContent = 'חיפוש במונחים';
+      const input = document.createElement('input');
+      input.id = 'termFilter';
+      input.type = 'search';
+      input.placeholder = 'הקלד כדי לסנן';
+      input.autocomplete = 'off';
+      filterWrap.appendChild(label);
+      filterWrap.appendChild(input);
+      list.parentNode.insertBefore(filterWrap, list);
       const items = links.map((link) => ({
         link,
         text: link.textContent?.trim() || ''

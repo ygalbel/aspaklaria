@@ -72,6 +72,41 @@ img {
   top: 0.75rem;
 }
 
+.quick-home {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 3;
+  display: block;
+  padding: 0.5rem var(--gutter);
+  background: color-mix(in srgb, var(--surface) 92%, white);
+  border-bottom: 1px solid var(--line);
+  color: var(--accent-dark);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 4px 14px var(--shadow);
+  transform: translateY(-120%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.quick-home:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.is-home .quick-home {
+  display: none;
+}
+
+.show-quick-home .quick-home {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .site__header {
   max-width: var(--max-width);
   margin: 0 auto;

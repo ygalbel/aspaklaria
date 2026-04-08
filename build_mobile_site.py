@@ -201,12 +201,6 @@ def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home
     </div>"""
 
     filter_block = ""
-    if "is-home" not in body_class:
-        filter_block = """
-    <div class=\"term-filter\" data-role=\"term-filter\" hidden>
-      <label for=\"termFilter\">חיפוש במונחים</label>
-      <input id=\"termFilter\" type=\"search\" placeholder=\"הקלד כדי לסנן\" autocomplete=\"off\" />
-    </div>"""
 
     suggested_block = ""
     if "is-home" in body_class:
@@ -226,6 +220,7 @@ def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home
 </head>
 <body class=\"site {body_class}\">
   <a class=\"skip\" href=\"#main\">דלג לתוכן</a>
+  <a class=\"quick-home\" href=\"{home_href}\" aria-label=\"חזרה לעמוד הראשי\">אספקלריא</a>
   <header class=\"site__header\">
     <a class=\"brand\" href=\"{home_href}\" aria-label=\"עמוד ראשי\">
       <span class=\"brand__he\">{logo_he}</span>
@@ -235,7 +230,7 @@ def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home
   </header>
    <main id=\"main\" class=\"site__main\">
    {site_search_block}
-  {filter_block}
+   {filter_block}
   {suggested_block}
     <div class=\"term-list\" data-role=\"term-list\">
 {body_html}
@@ -420,6 +415,18 @@ def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home
          }}
        }}
 
+        const quickHome = document.querySelector('.quick-home');
+        const header = document.querySelector('.site__header');
+        if (quickHome && header && !isHome) {{
+          const updateQuickHome = () => {{
+            const shouldShow = header.getBoundingClientRect().bottom <= 0;
+            document.body.classList.toggle('show-quick-home', shouldShow);
+          }};
+          updateQuickHome();
+          window.addEventListener('scroll', updateQuickHome, {{ passive: true }});
+          window.addEventListener('resize', updateQuickHome);
+        }}
+
         const list = document.querySelector('[data-role="term-list"]');
         if (list && !document.body.classList.contains('is-home')) {{
           const headings = Array.from(list.querySelectorAll('h2'));
@@ -461,18 +468,30 @@ def build_template(title, body_html, nav_items, logo_he, logo_en, css_path, home
           }});
         }}
 
-        const filterWrap = document.querySelector('[data-role="term-filter"]');
-       if (!list || !filterWrap) return;
+       if (!list) return;
 
        if (document.body.classList.contains('is-home')) return;
+
+      if (list.querySelector('h2')) return;
 
       const links = Array.from(list.querySelectorAll('a[href]'));
       if (links.length < 20) return;
 
       document.body.classList.add('is-index');
-      filterWrap.hidden = false;
 
-      const input = document.getElementById('termFilter');
+      const filterWrap = document.createElement('div');
+      filterWrap.className = 'term-filter';
+      const label = document.createElement('label');
+      label.setAttribute('for', 'termFilter');
+      label.textContent = 'חיפוש במונחים';
+      const input = document.createElement('input');
+      input.id = 'termFilter';
+      input.type = 'search';
+      input.placeholder = 'הקלד כדי לסנן';
+      input.autocomplete = 'off';
+      filterWrap.appendChild(label);
+      filterWrap.appendChild(input);
+      list.parentNode.insertBefore(filterWrap, list);
       const items = links.map((link) => ({{
         link,
         text: link.textContent?.trim() || ''
